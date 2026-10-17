@@ -1,0 +1,488 @@
+<title>บ้านสบาย ช็อป · สรุปยอดขาย W1-B</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --good:           #006300;
+    --series-1:       #2a78d6;
+    --series-2:       #eb6834;
+    --series-3:       #1baf7a;
+    --series-4:       #eda100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --good:           #0ca30c;
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --series-4:       #c98500;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --good:           #0ca30c;
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --series-4:       #c98500;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .viz-root {
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 24px 16px 48px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin: 0 0 24px; }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .kpi .label { font-size: 12px; color: var(--text-secondary); }
+  .kpi .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+  .kpi .delta { font-size: 12px; margin-top: 4px; color: var(--good); }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 2px; }
+  .card .hint { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
+
+  svg { display: block; overflow: visible; font-family: inherit; }
+  .axis-text { fill: var(--text-muted); font-size: 11px; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+
+  .line-path { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .end-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+  .end-label { font-size: 12px; font-weight: 600; fill: var(--text-primary); }
+  .hover-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; opacity: 0; }
+  .crosshair { stroke: var(--axis); stroke-width: 1; opacity: 0; }
+
+  .bar-label { font-size: 12px; fill: var(--text-primary); font-weight: 600; }
+  .bar-cat { font-size: 12px; fill: var(--text-secondary); }
+  .bar-rect { cursor: pointer; }
+  .bar-rect:hover { filter: brightness(1.08); }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 4px 0 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translate(-50%, -110%);
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .tooltip .t-val { font-weight: 700; color: var(--text-primary); }
+  .tooltip .t-key { color: var(--text-secondary); }
+
+  details.table-toggle { margin-top: 6px; }
+  details.table-toggle summary { cursor: pointer; font-size: 12px; color: var(--text-secondary); }
+  table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  table.data-table th, table.data-table td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; }
+  table.data-table th { color: var(--text-muted); font-weight: 600; }
+
+  .quarter-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; margin-top: 8px; }
+  .quarter-grid .qh { font-size: 12px; color: var(--text-muted); padding: 6px 10px; border-bottom: 1px solid var(--grid); }
+  .quarter-grid .qc { font-size: 13px; padding: 8px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  .quarter-grid .qc.row-label { color: var(--text-secondary); font-variant-numeric: normal; }
+</style>
+
+<div class="viz-root">
+  <div class="wrap">
+    <h1>บ้านสบาย ช็อป · สรุปยอดขาย (W1-B)</h1>
+    <p class="subtitle">ยอดขายสุทธิ = qty × unit_price × (1 − discount_pct/100) · เฉพาะ status = "จัดส่งสำเร็จ" · ไม่รวมค่าส่ง · ที่มา: orders.csv (16,249 แถวจัดส่งสำเร็จ จาก 17,529 แถว) + products.csv</p>
+
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="card">
+      <h2>ยอดขายสุทธิรายเดือน</h2>
+      <p class="hint">ต.ค. 2025 – ก.ย. 2026</p>
+      <svg id="lineChart" width="900" height="260" viewBox="0 0 900 260"></svg>
+      <details class="table-toggle">
+        <summary>ดูตาราง</summary>
+        <table class="data-table" id="monthlyTable"></table>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>สัดส่วนยอดขายตามช่องทาง</h2>
+      <p class="hint">เฉพาะออเดอร์จัดส่งสำเร็จ</p>
+      <svg id="barChart" width="900" height="220" viewBox="0 0 900 220"></svg>
+      <details class="table-toggle">
+        <summary>ดูตาราง</summary>
+        <table class="data-table" id="channelTable"></table>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>เทียบไตรมาส</h2>
+      <p class="hint">ต.ค.–ธ.ค. 2025 เทียบ ก.ค.–ก.ย. 2026</p>
+      <div class="quarter-grid" id="quarterGrid"></div>
+    </div>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+const DATA = {
+  "shape": [
+    17529,
+    18
+  ],
+  "statusCount": {
+    "จัดส่งสำเร็จ": 16249,
+    "ยกเลิก": 790,
+    "คืนสินค้า": 490
+  },
+  "sumAllStatus": 15832795,
+  "netSales": 14107737.05000001,
+  "grossProfit": 6201497.05000001,
+  "aov": 868.2218628838704,
+  "deliveredCount": 16249,
+  "monthly": [
+    {
+      "month": "2025-10",
+      "netSales": 1058060.1000000003
+    },
+    {
+      "month": "2025-11",
+      "netSales": 1306939.7
+    },
+    {
+      "month": "2025-12",
+      "netSales": 1260075.6500000001
+    },
+    {
+      "month": "2026-01",
+      "netSales": 1147285.8
+    },
+    {
+      "month": "2026-02",
+      "netSales": 962379.05
+    },
+    {
+      "month": "2026-03",
+      "netSales": 1147154.9
+    },
+    {
+      "month": "2026-04",
+      "netSales": 1085719.2
+    },
+    {
+      "month": "2026-05",
+      "netSales": 1206923.7
+    },
+    {
+      "month": "2026-06",
+      "netSales": 1202724.9500000002
+    },
+    {
+      "month": "2026-07",
+      "netSales": 1202876.5999999999
+    },
+    {
+      "month": "2026-08",
+      "netSales": 1271291.55
+    },
+    {
+      "month": "2026-09",
+      "netSales": 1256305.85
+    }
+  ],
+  "channel": [
+    {
+      "channel": "แอป",
+      "netSales": 5609750.4999999935,
+      "pct": 39.76364515526598
+    },
+    {
+      "channel": "เว็บไซต์",
+      "netSales": 3165726.849999999,
+      "pct": 22.439650234337172
+    },
+    {
+      "channel": "Marketplace",
+      "netSales": 3085320.6000000006,
+      "pct": 21.869705885962755
+    },
+    {
+      "channel": "LINE OA",
+      "netSales": 2246939.1000000015,
+      "pct": 15.92699872443398
+    }
+  ],
+  "quarterCompare": {
+    "ต.ค.-ธ.ค. 2025": {
+      "orders": 4341,
+      "netSales": 3625075.4499999997,
+      "grossProfit": 1565740.4499999997,
+      "aov": 835.0784266298087
+    },
+    "ก.ค.-ก.ย. 2026": {
+      "orders": 4272,
+      "netSales": 3730473.999999999,
+      "grossProfit": 1654378.999999999,
+      "aov": 873.2382958801496
+    }
+  }
+};
+
+const fmtBaht = n => '฿' + Math.round(n).toLocaleString('th-TH');
+const fmtBahtFull = n => n.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' บาท';
+const fmtPct = n => n.toFixed(1) + '%';
+const monthLabel = ym => {
+  const [y, m] = ym.split('-');
+  const names = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return names[parseInt(m,10)-1] + ' ' + y.slice(2);
+};
+
+const tooltip = document.getElementById('tooltip');
+const root = document.querySelector('.viz-root');
+function showTooltip(x, y, html) {
+  tooltip.innerHTML = html;
+  const rootRect = root.getBoundingClientRect();
+  tooltip.style.left = (x) + 'px';
+  tooltip.style.top = (y) + 'px';
+  tooltip.style.opacity = '1';
+}
+function hideTooltip() { tooltip.style.opacity = '0'; }
+
+// ---------- KPI row ----------
+const kpiRow = document.getElementById('kpiRow');
+const qKeys = Object.keys(DATA.quarterCompare);
+const q1 = DATA.quarterCompare[qKeys[0]], q2 = DATA.quarterCompare[qKeys[1]];
+const salesDelta = (q2.netSales - q1.netSales) / q1.netSales * 100;
+const kpis = [
+  { label: 'ยอดขายสุทธิ (ทั้งหมด)', value: fmtBaht(DATA.netSales) },
+  { label: 'กำไรขั้นต้น', value: fmtBaht(DATA.grossProfit) },
+  { label: 'AOV', value: fmtBaht(DATA.aov) + ' / ออเดอร์' },
+  { label: 'ยอดขายสุทธิไตรมาส (QoQ)', value: (salesDelta >= 0 ? '+' : '') + fmtPct(salesDelta), delta: qKeys[1] + ' เทียบ ' + qKeys[0] },
+];
+kpis.forEach(k => {
+  const div = document.createElement('div');
+  div.className = 'kpi';
+  div.innerHTML = '<div class="label"></div><div class="value"></div>' + (k.delta ? '<div class="delta"></div>' : '');
+  div.querySelector('.label').textContent = k.label;
+  div.querySelector('.value').textContent = k.value;
+  if (k.delta) div.querySelector('.delta').textContent = k.delta;
+  kpiRow.appendChild(div);
+});
+
+// ---------- Line chart: monthly net sales ----------
+(function () {
+  const svg = document.getElementById('lineChart');
+  const W = 900, H = 260, padL = 70, padR = 20, padT = 16, padB = 30;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const data = DATA.monthly;
+  const maxV = Math.max(...data.map(d => d.netSales));
+  const niceMax = Math.ceil(maxV / 200000) * 200000;
+  const x = i => padL + (innerW * i) / (data.length - 1);
+  const y = v => padT + innerH - (innerH * v) / niceMax;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // gridlines + y ticks
+  const steps = 4;
+  for (let i = 0; i <= steps; i++) {
+    const v = (niceMax / steps) * i;
+    const gy = y(v);
+    svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: gy, y2: gy, class: 'gridline' }));
+    const t = el('text', { x: padL - 10, y: gy + 4, 'text-anchor': 'end', class: 'axis-text' });
+    t.textContent = (v / 1000000).toFixed(1) + 'M';
+    svg.appendChild(t);
+  }
+  svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: padT + innerH, y2: padT + innerH, class: 'baseline' }));
+
+  // x labels (every other month to avoid crowding)
+  data.forEach((d, i) => {
+    if (i % 2 === 0 || i === data.length - 1) {
+      const t = el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle', class: 'axis-text' });
+      t.textContent = monthLabel(d.month);
+      svg.appendChild(t);
+    }
+  });
+
+  // line path
+  const pathD = data.map((d, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(d.netSales)).join(' ');
+  svg.appendChild(el('path', { d: pathD, class: 'line-path' }));
+
+  // end dot + label (max point also labeled)
+  const maxIdx = data.reduce((best, d, i) => d.netSales > data[best].netSales ? i : best, 0);
+  const lastIdx = data.length - 1;
+
+  [maxIdx, lastIdx].forEach(idx => {
+    const d = data[idx];
+    svg.appendChild(el('circle', { cx: x(idx), cy: y(d.netSales), r: 5, class: 'end-dot' }));
+    const label = el('text', {
+      x: x(idx), y: y(d.netSales) - 12,
+      'text-anchor': idx === lastIdx ? 'end' : 'middle',
+      class: 'end-label'
+    });
+    label.textContent = fmtBaht(d.netSales);
+    svg.appendChild(label);
+  });
+
+  // hover dots + crosshair
+  const crosshair = el('line', { x1: 0, x2: 0, y1: padT, y2: padT + innerH, class: 'crosshair' });
+  svg.appendChild(crosshair);
+  const hoverDot = el('circle', { r: 6, class: 'hover-dot' });
+  svg.appendChild(hoverDot);
+
+  const overlay = el('rect', { x: padL, y: padT, width: innerW, height: innerH, fill: 'transparent' });
+  svg.appendChild(overlay);
+
+  overlay.addEventListener('pointermove', (ev) => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const px = (ev.clientX - rect.left) * scaleX;
+    let idx = Math.round(((px - padL) / innerW) * (data.length - 1));
+    idx = Math.max(0, Math.min(data.length - 1, idx));
+    const d = data[idx];
+    crosshair.setAttribute('x1', x(idx));
+    crosshair.setAttribute('x2', x(idx));
+    crosshair.setAttribute('opacity', '1');
+    hoverDot.setAttribute('cx', x(idx));
+    hoverDot.setAttribute('cy', y(d.netSales));
+    hoverDot.setAttribute('opacity', '1');
+    const rootRect = root.getBoundingClientRect();
+    showTooltip(ev.clientX - rootRect.left, ev.clientY - rootRect.top,
+      '<div class="t-key">' + monthLabel(d.month) + '</div><div class="t-val">' + fmtBahtFull(d.netSales) + '</div>');
+  });
+  overlay.addEventListener('pointerleave', () => {
+    crosshair.setAttribute('opacity', '0');
+    hoverDot.setAttribute('opacity', '0');
+    hideTooltip();
+  });
+
+  // table
+  const table = document.getElementById('monthlyTable');
+  let html = '<tr><th>เดือน</th><th>ยอดขายสุทธิ</th></tr>';
+  data.forEach(d => { html += '<tr><td>' + monthLabel(d.month) + '</td><td>' + fmtBahtFull(d.netSales) + '</td></tr>'; });
+  table.innerHTML = html;
+})();
+
+// ---------- Bar chart: channel share ----------
+(function () {
+  const svg = document.getElementById('barChart');
+  const W = 900, H = 220, padL = 20, padR = 20, padT = 16, padB = 36;
+  const innerW = W - padL - padR;
+  const data = DATA.channel;
+  const colors = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)'];
+  const maxV = Math.max(...data.map(d => d.netSales));
+  const barGap = 16;
+  const barW = (innerW - barGap * (data.length - 1)) / data.length;
+  const maxBarH = H - padT - padB - 30;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  data.forEach((d, i) => {
+    const bx = padL + i * (barW + barGap);
+    const bh = (d.netSales / maxV) * maxBarH;
+    const by = padT + 30 + (maxBarH - bh);
+    const rect = el('rect', {
+      x: bx, y: by, width: barW, height: bh, rx: 4,
+      fill: colors[i], class: 'bar-rect'
+    });
+    svg.appendChild(rect);
+
+    const valLabel = el('text', { x: bx + barW / 2, y: by - 8, 'text-anchor': 'middle', class: 'bar-label' });
+    valLabel.textContent = fmtBaht(d.netSales) + ' (' + fmtPct(d.pct) + ')';
+    svg.appendChild(valLabel);
+
+    const catLabel = el('text', { x: bx + barW / 2, y: padT + 30 + maxBarH + 20, 'text-anchor': 'middle', class: 'bar-cat' });
+    catLabel.textContent = d.channel;
+    svg.appendChild(catLabel);
+
+    rect.addEventListener('pointermove', (ev) => {
+      const rootRect = root.getBoundingClientRect();
+      showTooltip(ev.clientX - rootRect.left, ev.clientY - rootRect.top,
+        '<div class="t-key">' + d.channel + '</div><div class="t-val">' + fmtBahtFull(d.netSales) + '</div><div class="t-key">' + fmtPct(d.pct) + ' ของยอดขายสุทธิ</div>');
+    });
+    rect.addEventListener('pointerleave', hideTooltip);
+  });
+
+  const table = document.getElementById('channelTable');
+  let html = '<tr><th>ช่องทาง</th><th>ยอดขายสุทธิ</th><th>สัดส่วน</th></tr>';
+  data.forEach(d => { html += '<tr><td>' + d.channel + '</td><td>' + fmtBahtFull(d.netSales) + '</td><td>' + fmtPct(d.pct) + '</td></tr>'; });
+  table.innerHTML = html;
+})();
+
+// ---------- Quarter comparison grid ----------
+(function () {
+  const grid = document.getElementById('quarterGrid');
+  const rows = [
+    { label: 'จำนวนออเดอร์', fmt: v => v.toLocaleString('th-TH') , key: 'orders' },
+    { label: 'ยอดขายสุทธิ', fmt: fmtBahtFull, key: 'netSales' },
+    { label: 'กำไรขั้นต้น', fmt: fmtBahtFull, key: 'grossProfit' },
+    { label: 'AOV', fmt: fmtBahtFull, key: 'aov' },
+  ];
+  let html = '<div class="qh"></div><div class="qh">' + qKeys[0] + '</div><div class="qh">' + qKeys[1] + '</div>';
+  rows.forEach(r => {
+    html += '<div class="qc row-label">' + r.label + '</div><div class="qc">' + r.fmt(q1[r.key]) + '</div><div class="qc">' + r.fmt(q2[r.key]) + '</div>';
+  });
+  grid.innerHTML = html;
+})();
+</script>
