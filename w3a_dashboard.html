@@ -1,0 +1,543 @@
+<title>บ้านสบาย ช็อป · แดชบอร์ดผู้จัดการร้าน</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --good:           #006300;
+    --warn:           #ec835a;
+    --series-1:       #2a78d6;
+    --series-2:       #eb6834;
+    --series-3:       #1baf7a;
+    --series-4:       #eda100;
+    --accent-wash:    rgba(42,120,214,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --good:           #0ca30c;
+      --warn:           #e66767;
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --series-4:       #c98500;
+      --accent-wash:    rgba(57,135,229,0.12);
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --good:           #0ca30c;
+    --warn:           #e66767;
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --series-4:       #c98500;
+    --accent-wash:    rgba(57,135,229,0.12);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .viz-root {
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 24px 16px 64px;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin: 0 0 20px; }
+
+  /* upload */
+  .upload-card {
+    background: var(--surface-1);
+    border: 1px dashed var(--axis);
+    border-radius: 10px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .upload-card.compact { padding: 14px 20px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .upload-card p { margin: 0 0 12px; color: var(--text-secondary); font-size: 13px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--series-1); color: #fff; border: none; border-radius: 8px;
+    padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: inherit;
+  }
+  .btn:hover { filter: brightness(1.05); }
+  .btn.secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+  input[type="file"] { display: none; }
+  .file-status { font-size: 12px; color: var(--text-muted); }
+  .error-box {
+    background: var(--surface-1); border: 1px solid var(--warn); border-radius: 8px;
+    padding: 12px 14px; font-size: 13px; color: var(--warn); margin-bottom: 16px; display: none;
+  }
+
+  /* filter row */
+  .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+  .filter-row label { font-size: 12px; color: var(--text-muted); }
+  select {
+    font-family: inherit; font-size: 13px; padding: 7px 10px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .kpi {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .kpi .label { font-size: 12px; color: var(--text-secondary); }
+  .kpi .value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+
+  .verify-row {
+    font-size: 12px; color: var(--text-muted); margin-bottom: 24px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+  }
+  .verify-row b { color: var(--text-secondary); }
+  .verify-row .status-chip { display: inline-block; margin-right: 10px; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px 12px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 2px; }
+  .card .hint { font-size: 12px; color: var(--text-muted); margin: 0 0 12px; }
+
+  svg { display: block; overflow: visible; font-family: inherit; }
+  .axis-text { fill: var(--text-muted); font-size: 11px; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--axis); stroke-width: 1; }
+
+  .line-path { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .end-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+  .end-label { font-size: 12px; font-weight: 600; fill: var(--text-primary); }
+  .hover-dot { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; opacity: 0; }
+  .crosshair { stroke: var(--axis); stroke-width: 1; opacity: 0; }
+
+  .bar-label { font-size: 12px; fill: var(--text-primary); font-weight: 600; }
+  .bar-cat { font-size: 12px; fill: var(--text-secondary); }
+  .bar-rect { cursor: pointer; }
+  .bar-rect:hover { filter: brightness(1.08); }
+
+  .tooltip {
+    position: absolute; pointer-events: none;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    opacity: 0; transform: translate(-50%, -110%); white-space: nowrap; z-index: 10;
+  }
+  .tooltip .t-val { font-weight: 700; color: var(--text-primary); }
+  .tooltip .t-key { color: var(--text-secondary); }
+
+  .empty-state { color: var(--text-muted); font-size: 13px; padding: 40px 0; text-align: center; }
+</style>
+
+<div class="viz-root" id="appRoot">
+  <div class="wrap">
+    <h1>บ้านสบาย ช็อป · แดชบอร์ดผู้จัดการร้าน</h1>
+    <p class="subtitle">ยอดขายสุทธิ = qty × unit_price × (1 − discount_pct/100) · เฉพาะ status = "จัดส่งสำเร็จ" · ไม่รวม shipping_fee</p>
+
+    <div class="upload-card" id="uploadCard">
+      <p>อัปโหลดไฟล์ orders.csv (UTF-8 มี BOM ได้) — ไม่มีการฝังข้อมูลไว้ในหน้านี้ ข้อมูลอยู่ในเบราว์เซอร์ของคุณเท่านั้น</p>
+      <label class="btn" for="csvInput">เลือกไฟล์ orders.csv</label>
+      <input type="file" id="csvInput" accept=".csv,text/csv" />
+    </div>
+    <div class="error-box" id="errorBox"></div>
+
+    <div id="dashboard" style="display:none;">
+      <div class="upload-card compact">
+        <span class="file-status" id="fileStatus"></span>
+        <label class="btn secondary" for="csvInput2">เปลี่ยนไฟล์</label>
+        <input type="file" id="csvInput2" accept=".csv,text/csv" />
+      </div>
+
+      <div class="filter-row">
+        <label for="regionFilter">ภูมิภาค</label>
+        <select id="regionFilter"></select>
+        <label for="categoryFilter">หมวดสินค้า</label>
+        <select id="categoryFilter"></select>
+      </div>
+
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="verify-row" id="verifyRow"></div>
+
+      <div class="card">
+        <h2>ยอดขายสุทธิรายเดือน</h2>
+        <p class="hint" id="lineHint"></p>
+        <svg id="lineChart" width="960" height="260" viewBox="0 0 960 260"></svg>
+      </div>
+
+      <div class="card">
+        <h2>ยอดขายตามช่องทาง</h2>
+        <p class="hint" id="barHint"></p>
+        <svg id="barChart" width="960" height="220" viewBox="0 0 960 220"></svg>
+      </div>
+    </div>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('appRoot');
+  const tooltip = document.getElementById('tooltip');
+  const errorBox = document.getElementById('errorBox');
+  const REQUIRED_COLS = ['order_id','order_datetime','channel','region','category','qty','unit_price','discount_pct','shipping_fee','status'];
+
+  let RAW_ROWS = [];
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+  }
+  function clearError() { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+
+  function showTooltip(x, y, html) {
+    tooltip.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html; // built from trusted local template strings only (values via textContent below)
+    tooltip.appendChild(wrap);
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+    tooltip.style.opacity = '1';
+  }
+  function hideTooltip() { tooltip.style.opacity = '0'; }
+
+  // ---- CSV parsing (handles quoted fields, BOM, CRLF) ----
+  function parseCsv(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const rows = [];
+    let row = [], cell = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { cell += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(cell); cell = ''; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { row.push(cell); cell = ''; rows.push(row); row = []; }
+        else cell += c;
+      }
+    }
+    if (cell.length > 0 || row.length > 0) { row.push(cell); rows.push(row); }
+    const nonEmpty = rows.filter(r => !(r.length === 1 && r[0] === ''));
+    if (nonEmpty.length === 0) return [];
+    const headers = nonEmpty[0].map(h => h.trim());
+    return nonEmpty.slice(1).map(cells => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = cells[i] !== undefined ? cells[i] : ''; });
+      return obj;
+    });
+  }
+
+  const fmtBaht = n => '฿' + Math.round(n).toLocaleString('th-TH');
+  const fmtBahtFull = n => n.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' บาท';
+  const fmtPct = n => n.toFixed(1) + '%';
+  const monthNames = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const monthLabel = ym => {
+    const [y, m] = ym.split('-');
+    return monthNames[parseInt(m,10)-1] + ' ' + y.slice(2);
+  };
+
+  function lineNetSales(r) {
+    const qty = Number(r.qty), price = Number(r.unit_price), disc = Number(r.discount_pct) || 0;
+    return qty * price * (1 - disc / 100);
+  }
+
+  // ---- file loading ----
+  function handleFile(file) {
+    clearError();
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const rows = parseCsv(e.target.result);
+        if (rows.length === 0) { showError('อ่านไฟล์ไม่สำเร็จ หรือไฟล์ว่างเปล่า'); return; }
+        const missing = REQUIRED_COLS.filter(c => !(c in rows[0]));
+        if (missing.length > 0) {
+          showError('ไฟล์ขาดคอลัมน์ที่จำเป็น: ' + missing.join(', '));
+          return;
+        }
+        RAW_ROWS = rows;
+        document.getElementById('fileStatus').textContent = 'ไฟล์: ' + file.name + ' · ' + rows.length.toLocaleString('th-TH') + ' แถว';
+        document.getElementById('uploadCard').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        initFilters();
+        render();
+      } catch (err) {
+        showError('เกิดข้อผิดพลาดระหว่างอ่านไฟล์: ' + err.message);
+      }
+    };
+    reader.onerror = () => showError('ไม่สามารถอ่านไฟล์ได้');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  document.getElementById('csvInput').addEventListener('change', (e) => handleFile(e.target.files[0]));
+  document.getElementById('csvInput2').addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+  // ---- filters ----
+  function uniqueSorted(rows, key) {
+    return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
+  }
+  function initFilters() {
+    const regionSel = document.getElementById('regionFilter');
+    const catSel = document.getElementById('categoryFilter');
+    const regions = uniqueSorted(RAW_ROWS, 'region');
+    const cats = uniqueSorted(RAW_ROWS, 'category');
+    regionSel.innerHTML = '<option value="">ทั้งหมด</option>' + regions.map(r => `<option value="${r}">${r}</option>`).join('');
+    catSel.innerHTML = '<option value="">ทั้งหมด</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    regionSel.onchange = render;
+    catSel.onchange = render;
+  }
+
+  function filteredRows() {
+    const region = document.getElementById('regionFilter').value;
+    const category = document.getElementById('categoryFilter').value;
+    return RAW_ROWS.filter(r => (!region || r.region === region) && (!category || r.category === category));
+  }
+
+  // ---- render ----
+  function render() {
+    const rows = filteredRows();
+    const total = rows.length;
+    const statusCount = {};
+    rows.forEach(r => { statusCount[r.status] = (statusCount[r.status] || 0) + 1; });
+
+    const delivered = rows.filter(r => r.status === 'จัดส่งสำเร็จ');
+    const netSales = delivered.reduce((s, r) => s + lineNetSales(r), 0);
+    const aov = delivered.length ? netSales / delivered.length : 0;
+    const cancelled = statusCount['ยกเลิก'] || 0;
+    const cancelRate = total ? (cancelled / total * 100) : 0;
+
+    // KPI cards
+    const kpiRow = document.getElementById('kpiRow');
+    kpiRow.innerHTML = '';
+    const kpis = [
+      { label: 'ยอดขายสุทธิ', value: fmtBaht(netSales) },
+      { label: 'จำนวนคำสั่งซื้อสำเร็จ', value: delivered.length.toLocaleString('th-TH') },
+      { label: 'AOV', value: fmtBaht(aov) },
+      { label: 'อัตรายกเลิก', value: fmtPct(cancelRate) },
+    ];
+    kpis.forEach(k => {
+      const div = document.createElement('div');
+      div.className = 'kpi';
+      const l = document.createElement('div'); l.className = 'label'; l.textContent = k.label;
+      const v = document.createElement('div'); v.className = 'value'; v.textContent = k.value;
+      div.appendChild(l); div.appendChild(v);
+      kpiRow.appendChild(div);
+    });
+
+    // verify row
+    const verifyRow = document.getElementById('verifyRow');
+    verifyRow.innerHTML = '';
+    const verifyIntro = document.createElement('div');
+    verifyIntro.innerHTML = '<b>ตรวจสอบข้อมูล:</b> ';
+    const introB = document.createElement('b'); introB.textContent = 'ตรวจสอบข้อมูล: ';
+    verifyRow.appendChild(introB);
+    const countSpan = document.createElement('span');
+    countSpan.textContent = 'จำนวนแถวที่อ่านได้ (ตามตัวกรอง) ' + total.toLocaleString('th-TH') + ' แถว · ';
+    verifyRow.appendChild(countSpan);
+    Object.entries(statusCount).sort((a,b) => b[1]-a[1]).forEach(([st, c]) => {
+      const chip = document.createElement('span');
+      chip.className = 'status-chip';
+      chip.textContent = st + ': ' + c.toLocaleString('th-TH');
+      verifyRow.appendChild(chip);
+    });
+
+    renderLineChart(delivered);
+    renderBarChart(delivered, netSales);
+  }
+
+  function renderLineChart(delivered) {
+    const svg = document.getElementById('lineChart');
+    svg.innerHTML = '';
+    document.getElementById('lineHint').textContent = delivered.length ? 'เรียงตามเวลา (ม.ค.–ธ.ค.)' : '';
+    const monthly = {};
+    delivered.forEach(r => {
+      const ym = (r.order_datetime || '').slice(0, 7);
+      if (!ym) return;
+      monthly[ym] = (monthly[ym] || 0) + lineNetSales(r);
+    });
+    const data = Object.entries(monthly).sort(([a],[b]) => a.localeCompare(b)).map(([month, netSales]) => ({month, netSales}));
+
+    if (data.length === 0) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', 480); t.setAttribute('y', 130); t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('class', 'axis-text'); t.textContent = 'ไม่มีข้อมูลตามตัวกรองที่เลือก';
+      svg.appendChild(t);
+      return;
+    }
+
+    const W = 960, H = 260, padL = 70, padR = 20, padT = 16, padB = 30;
+    const innerW = W - padL - padR, innerH = H - padT - padB;
+    const maxV = Math.max(...data.map(d => d.netSales), 1);
+    const niceMax = Math.ceil(maxV / 200000) * 200000 || maxV;
+    const x = i => data.length > 1 ? padL + (innerW * i) / (data.length - 1) : padL + innerW / 2;
+    const y = v => padT + innerH - (innerH * v) / niceMax;
+    const ns = 'http://www.w3.org/2000/svg';
+    function el(tag, attrs) {
+      const e = document.createElementNS(ns, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const v = (niceMax / steps) * i;
+      const gy = y(v);
+      svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: gy, y2: gy, class: 'gridline' }));
+      const t = el('text', { x: padL - 10, y: gy + 4, 'text-anchor': 'end', class: 'axis-text' });
+      t.textContent = (v / 1000000).toFixed(1) + 'M';
+      svg.appendChild(t);
+    }
+    svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: padT + innerH, y2: padT + innerH, class: 'baseline' }));
+
+    data.forEach((d, i) => {
+      if (i % Math.ceil(data.length / 12) === 0 || i === data.length - 1) {
+        const t = el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle', class: 'axis-text' });
+        t.textContent = monthLabel(d.month);
+        svg.appendChild(t);
+      }
+    });
+
+    const pathD = data.map((d, i) => (i === 0 ? 'M' : 'L') + x(i) + ',' + y(d.netSales)).join(' ');
+    svg.appendChild(el('path', { d: pathD, class: 'line-path' }));
+
+    const maxIdx = data.reduce((best, d, i) => d.netSales > data[best].netSales ? i : best, 0);
+    const lastIdx = data.length - 1;
+    new Set([maxIdx, lastIdx]).forEach(idx => {
+      const d = data[idx];
+      svg.appendChild(el('circle', { cx: x(idx), cy: y(d.netSales), r: 5, class: 'end-dot' }));
+      const label = el('text', { x: x(idx), y: y(d.netSales) - 12, 'text-anchor': idx === lastIdx ? 'end' : 'middle', class: 'end-label' });
+      label.textContent = fmtBaht(d.netSales);
+      svg.appendChild(label);
+    });
+
+    const crosshair = el('line', { x1: 0, x2: 0, y1: padT, y2: padT + innerH, class: 'crosshair' });
+    svg.appendChild(crosshair);
+    const hoverDot = el('circle', { r: 6, class: 'hover-dot' });
+    svg.appendChild(hoverDot);
+    const overlay = el('rect', { x: padL, y: padT, width: innerW, height: innerH, fill: 'transparent' });
+    svg.appendChild(overlay);
+
+    overlay.addEventListener('pointermove', (ev) => {
+      const rect = svg.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const px = (ev.clientX - rect.left) * scaleX;
+      let idx = data.length > 1 ? Math.round(((px - padL) / innerW) * (data.length - 1)) : 0;
+      idx = Math.max(0, Math.min(data.length - 1, idx));
+      const d = data[idx];
+      crosshair.setAttribute('x1', x(idx)); crosshair.setAttribute('x2', x(idx)); crosshair.setAttribute('opacity', '1');
+      hoverDot.setAttribute('cx', x(idx)); hoverDot.setAttribute('cy', y(d.netSales)); hoverDot.setAttribute('opacity', '1');
+      const rootRect = root.getBoundingClientRect();
+      const keyEl = document.createElement('div'); keyEl.className = 't-key'; keyEl.textContent = monthLabel(d.month);
+      const valEl = document.createElement('div'); valEl.className = 't-val'; valEl.textContent = fmtBahtFull(d.netSales);
+      tooltip.innerHTML = ''; tooltip.appendChild(keyEl); tooltip.appendChild(valEl);
+      tooltip.style.left = (ev.clientX - rootRect.left) + 'px';
+      tooltip.style.top = (ev.clientY - rootRect.top) + 'px';
+      tooltip.style.opacity = '1';
+    });
+    overlay.addEventListener('pointerleave', () => {
+      crosshair.setAttribute('opacity', '0'); hoverDot.setAttribute('opacity', '0'); hideTooltip();
+    });
+  }
+
+  function renderBarChart(delivered, totalNetSales) {
+    const svg = document.getElementById('barChart');
+    svg.innerHTML = '';
+    document.getElementById('barHint').textContent = delivered.length ? 'เฉพาะออเดอร์จัดส่งสำเร็จ ตามตัวกรองที่เลือก' : '';
+    const channelSales = {};
+    delivered.forEach(r => { channelSales[r.channel] = (channelSales[r.channel] || 0) + lineNetSales(r); });
+    const data = Object.entries(channelSales).sort((a,b) => b[1]-a[1]).map(([channel, netSales]) => ({channel, netSales}));
+
+    if (data.length === 0) {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', 480); t.setAttribute('y', 110); t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('class', 'axis-text'); t.textContent = 'ไม่มีข้อมูลตามตัวกรองที่เลือก';
+      svg.appendChild(t);
+      return;
+    }
+
+    const W = 960, H = 220, padL = 20, padR = 20, padT = 16, padB = 36;
+    const innerW = W - padL - padR;
+    const colors = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-4)'];
+    const maxV = Math.max(...data.map(d => d.netSales), 1);
+    const barGap = 16;
+    const barW = Math.min(90, (innerW - barGap * (data.length - 1)) / data.length);
+    const totalBarsW = barW * data.length + barGap * (data.length - 1);
+    const startX = padL + (innerW - totalBarsW) / 2;
+    const maxBarH = H - padT - padB - 30;
+    const ns = 'http://www.w3.org/2000/svg';
+    function el(tag, attrs) {
+      const e = document.createElementNS(ns, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+
+    data.forEach((d, i) => {
+      const bx = startX + i * (barW + barGap);
+      const bh = (d.netSales / maxV) * maxBarH;
+      const by = padT + 30 + (maxBarH - bh);
+      const rect = el('rect', { x: bx, y: by, width: barW, height: bh, rx: 4, fill: colors[i % colors.length], class: 'bar-rect' });
+      svg.appendChild(rect);
+
+      const pct = totalNetSales ? (d.netSales / totalNetSales * 100) : 0;
+      const valLabel = el('text', { x: bx + barW / 2, y: by - 8, 'text-anchor': 'middle', class: 'bar-label' });
+      valLabel.textContent = fmtBaht(d.netSales) + ' (' + fmtPct(pct) + ')';
+      svg.appendChild(valLabel);
+
+      const catLabel = el('text', { x: bx + barW / 2, y: padT + 30 + maxBarH + 20, 'text-anchor': 'middle', class: 'bar-cat' });
+      catLabel.textContent = d.channel;
+      svg.appendChild(catLabel);
+
+      rect.addEventListener('pointermove', (ev) => {
+        const rootRect = root.getBoundingClientRect();
+        const keyEl = document.createElement('div'); keyEl.className = 't-key'; keyEl.textContent = d.channel;
+        const valEl = document.createElement('div'); valEl.className = 't-val'; valEl.textContent = fmtBahtFull(d.netSales);
+        const pctEl = document.createElement('div'); pctEl.className = 't-key'; pctEl.textContent = fmtPct(pct) + ' ของยอดขายสุทธิ';
+        tooltip.innerHTML = ''; tooltip.appendChild(keyEl); tooltip.appendChild(valEl); tooltip.appendChild(pctEl);
+        tooltip.style.left = (ev.clientX - rootRect.left) + 'px';
+        tooltip.style.top = (ev.clientY - rootRect.top) + 'px';
+        tooltip.style.opacity = '1';
+      });
+      rect.addEventListener('pointerleave', hideTooltip);
+    });
+  }
+})();
+</script>
